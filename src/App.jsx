@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import { Box, Input, Button, Card, Typography } from '@mui/joy/';
+import { Select, Box, Input, Button, Card, Typography, Option } from '@mui/joy/';
 import Pagination from '@mui/material/Pagination';
 import axios from "axios";
 
@@ -11,7 +11,7 @@ function App() {
   const [totalCount, setTotalCount] = useState(0); 
   const [itemsPerPage, setItemsPerPage] = useState(15); 
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasSearch, setHasSearch] = useState(false); // Что то нашлось?
+  const [hasSearch, setHasSearch] = useState(0); // Что то нашлось?
 
   const handleSearch = async (page) => {
     try {
@@ -19,7 +19,9 @@ function App() {
         `https://api.github.com/search/repositories?q=${searchTerm}&page=${page}&per_page=${itemsPerPage}`
       );
       console.log(response);
-      if(response.data.totalCount !== 0) setHasSearch(true);
+      if(response.data.total_count !== 0) setHasSearch(1);
+      else setHasSearch(2);
+      console.log(hasSearch);
       setResults(response.data.items || []);
       setTotalCount(response.data.total_count);
 
@@ -32,6 +34,7 @@ function App() {
     setCurrentPage(page);
     handleSearch(page);
   };
+
 
   return (
     <>
@@ -48,17 +51,17 @@ function App() {
           <Button onClick={() => handleSearch(1)} variant="solid">
             Поиск
           </Button>
-          <Input
-            placeholder="Кол-во элемов"
-            value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(e.target.value)}
-            sx={{ width: "150px" }}
-          />
+          <Select defaultValue='5' onChange={(event, value) => setItemsPerPage(value)}>
+            <Option value='5'>5</Option>
+            <Option value='15'>15</Option>
+            <Option value='30'>30</Option>
+          </Select>
         </Box>
 
         {/* Отображение результатов */}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", padding: '2rem 0'}}>
-          {!hasSearch && <Typography className='notFound' sx={{ color: 'white' }}>Ничего не найдено</Typography>}
+          {console.log(`!hasSearch: ${!hasSearch}\n !results ${!results}`)}
+          {hasSearch == 2 && <Typography className='notFound' sx={{ color: 'white' }}>Ничего не найдено</Typography>}
           {results.map((repo) => (
 
               <Card
@@ -77,7 +80,7 @@ function App() {
           ))}
           
         </Box>
-        {hasSearch && 
+        {hasSearch == 1 && 
           <Pagination
           count={Math.ceil(totalCount / itemsPerPage)}
           color="primary"
@@ -87,7 +90,6 @@ function App() {
           
         />
         }
-        
       </Box>
     </>
   )
